@@ -1,7 +1,11 @@
 package minesweeper.server;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -91,11 +95,61 @@ public class Board {
      * @throws IOException In case file is invalid, or contains malformed input
      */
     public Board(File file) throws IOException{
+//        Charset charset = Charset.forName("US-ASCII");
+//        try (BufferedReader reader = Files.newBufferedReader(file.toPath(), charset)) {
+//            String line = null;
+//            while ((line = reader.readLine()) != null) {
+//                System.out.println(line);
+//            }
+//        } catch (IOException x) {
+//            System.err.format("IOException: %s%n", x);
+//        }
+        Charset charset = Charset.forName("US-ASCII");
+        BufferedReader reader = Files.newBufferedReader(file.toPath(), charset);
+        String line = null; 
+        while ((line = reader.readLine()) != null) {
+            List<String> bombLine = new ArrayList<String>();
+            for (char c : line.toCharArray()){
+                if (c == '0')
+                    bombLine.add(NO_BOMB);
+                if (c == '1')
+                    bombLine.add(BOMB);
+                // do nothing if the char is a space
+            }
+            BOMB_BOARD.add(bombLine);
+        }
         
+        // initialize USER_BOARD
+        for (int i = 0; i < BOMB_BOARD.size(); i++){
+            List<String> userLine = new ArrayList<String>();
+            for (int j = 0; j < BOMB_BOARD.size(); j++){
+                userLine.add(UNTOUCHED);
+            }
+            USER_BOARD.add(userLine);
+        }
     }
     
     public synchronized String look() {
-        return USER_BOARD.toString();
+        String result = "";
+        for (List<String> line : USER_BOARD){
+            for (String space : line){
+                if (space.equals(UNTOUCHED))
+                    result += UNTOUCHED;
+                else if (space.equals(FLAGGED))
+                    result += FLAGGED;
+                else if (space.equals(DUG_NO_NEIGHBORS))
+                    result += DUG_NO_NEIGHBORS;
+                // Must be a number at this point, otherwise rep invariant
+                // has been violated. Throws a NumberFormatException (unchecked)
+                else {
+                    Integer bombHint = Integer.parseInt(space);
+                    result += bombHint.toString();
+                }
+                result += " ";
+            }
+            result += "\r\n";
+        }
+        return result;
     }
     
     /**
@@ -166,7 +220,12 @@ public class Board {
         // only check until x+1 or size-1, whichever is smaller
         for (int i = xC; xC <= Math.min(size-1, x+1); i++){ 
             for (int j = yC; yC <= Math.min(size-1, y+1); j++){
-                
+                // No bomb, not dug, and no neighboring bombs
+                if (BOMB_BOARD.get(j).get(i).equals(NO_BOMB) 
+                        && USER_BOARD.get(j).get(i).equals(UNTOUCHED) 
+                        && findAdjacentBombCount(i, j) == 0) {
+                    recursiveDig(i, j);
+                }
             }
         }
     }
@@ -300,5 +359,26 @@ public class Board {
         }
         
         return true;
+    }
+    
+    
+    // REMOVE
+    public List<?> getbombs(){
+        return BOMB_BOARD;
+    }
+    public static void main(String args[]) throws IOException{
+        File file = new File("/Users/jains/Documents/test.txt");
+//        Charset charset = Charset.forName("US-ASCII");
+//        try (BufferedReader reader = Files.newBufferedReader(file.toPath(), charset)) {
+//            String line = null;
+//            while ((line = reader.readLine()) != null) {
+//                System.out.println(line);
+//            }
+//        } catch (IOException x) {
+//            System.err.format("IOException: %s%n", x);
+//        }
+        Board b = new Board(file);
+        System.out.println(b.look());
+        System.out.println(b.getbombs());
     }
 }
