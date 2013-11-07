@@ -31,16 +31,36 @@ public class MinesweeperServer {
     public void serve() throws IOException {
         while (true) {
             // block until a client connects
-            Socket socket = serverSocket.accept();
+            final Socket socket = serverSocket.accept();
 
-            // handle the client
-            try {
-                handleConnection(socket);
-            } catch (IOException e) {
-                e.printStackTrace(); // but don't terminate serve()
-            } finally {
-                socket.close();
-            }
+//            // handle the client
+//            try {
+//                handleConnection(socket);
+//            } catch (IOException e) {
+//                e.printStackTrace(); // but don't terminate serve()
+//            } finally {
+//                socket.close();
+//            }
+//        }
+//        
+            // A client is trying to connect, create a new thread for him.
+            new Thread(){
+                public void run() {
+                    // handle the client
+                    try {
+                        handleConnection(socket);
+                    } catch (IOException e) {
+                        e.printStackTrace(); // but don't terminate serve()
+                    } finally {
+                        try {
+                            socket.close();
+                        } catch (IOException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }.start();
         }
     }
 
