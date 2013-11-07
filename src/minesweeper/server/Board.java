@@ -130,8 +130,10 @@ public class Board {
         else if (bombSquare.equals(NO_BOMB)){
             // Dig the square
             String toSet = findAdjacentBombCount(x, y).toString();
-            if (toSet.equals("0"))
+            if (toSet.equals("0")){
                 toSet = DUG_NO_NEIGHBORS;
+                recursiveDig(x, y); // TODO add this method.
+            }
             USER_BOARD.get(y).set(x, toSet);
         }
         
@@ -140,8 +142,66 @@ public class Board {
         
     }
     
+    /**
+     * Does a recursive dig on all UNTOUCHED neighbor squares as long 
+     * as they have no adjacent bombs. The space at x,y should already be 
+     * set to DUG_NO_NEIGHBORS.
+     * @param x int x coord. x >= 0
+     * @param y int y coord. y >= 0
+     */
+    private void recursiveDig(int x, int y) {
+        int size = USER_BOARD.size();
+        int xC = x - 1;
+        int yC = y - 1;
+        if(x >= 0 && y >= 0) { // bounds ok
+        }else if (x < 0 && y < 0){
+            xC++;
+            yC++;
+        }else if (y < 0){
+            yC++;
+        }else if (x < 0) {
+            xC++;
+        }
+
+        // only check until x+1 or size-1, whichever is smaller
+        for (int i = xC; xC <= Math.min(size-1, x+1); i++){ 
+            for (int j = yC; yC <= Math.min(size-1, y+1); j++){
+                
+            }
+        }
+    }
+
+    /**
+     * Finds the space at x,y's bomb hint number
+     * @param x int x coord. x >= 0
+     * @param y int y coord. y >= 0
+     * @return Integer 0-8 
+     */
     private Integer findAdjacentBombCount(int x, int y) {
+        int size = USER_BOARD.size();
+        int xC = x - 1;
+        int yC = y - 1;
+        if(x >= 0 && y >= 0) { // bounds ok
+        }else if (x < 0 && y < 0){
+            xC++;
+            yC++;
+        }else if (y < 0){
+            yC++;
+        }else if (x < 0) {
+            xC++;
+        }
         
+        int bombCount = 0;
+        
+        // only check until x+1 or size-1, whichever is smaller
+        for (int i = xC; xC <= Math.min(size-1, x+1); i++){ 
+            for (int j = yC; yC <= Math.min(size-1, y+1); j++){
+                if (BOMB_BOARD.get(j).get(i).equals(BOMB))
+                    bombCount++;
+            }
+        }
+        
+        return bombCount;
     }
 
     /**
@@ -165,13 +225,49 @@ public class Board {
         USER_BOARD.get(y).set(x, UNTOUCHED);
     }
     
+    /**
+     * Removes the bomb from the location x,y, and updates all adjacent squares'
+     * 'bomb hint' number. Location x,y must have a bomb. 
+     * @param x int x coord. x >= 0
+     * @param y int y coord. y >= 0
+     */
     private synchronized void removeBomb(int x, int y){
+        assert BOMB_BOARD.get(y).get(x).equals(BOMB);
+        BOMB_BOARD.get(y).set(x, NO_BOMB);
         
+        String toSet = findAdjacentBombCount(x, y).toString();
+        if (toSet.equals("0")){
+            toSet = DUG_NO_NEIGHBORS;
+        }
+        USER_BOARD.get(y).set(x, toSet);
+        
+        int size = USER_BOARD.size();
+        int xC = x - 1;
+        int yC = y - 1;
+        if(x >= 0 && y >= 0) { // bounds ok
+        }else if (x < 0 && y < 0){
+            xC++;
+            yC++;
+        }else if (y < 0){
+            yC++;
+        }else if (x < 0) {
+            xC++;
+        }
+        
+        for (int i = xC; xC <= Math.min(size-1, x+1); i++){ // only check until x+1 or size-1
+            for (int j = yC; yC <= Math.min(size-1, y+1); j++){
+                String toSet1 = findAdjacentBombCount(i, j).toString();
+                if (toSet1.equals("0")){
+                    toSet1 = DUG_NO_NEIGHBORS;
+                }
+                USER_BOARD.get(j).set(i, toSet1);
+            }
+        }
     }
     
     /**
      * Checks rep invariants. 
-     *  - USER_BOARD dimentions equal to BOMB_BOARD
+     *  - USER_BOARD Dimensions equal to BOMB_BOARD
      *  - USER_BOARD and BOMB_BOARD contain appropriate states
      * @return boolean true if rep invariants hold, false otherwise. 
      */
