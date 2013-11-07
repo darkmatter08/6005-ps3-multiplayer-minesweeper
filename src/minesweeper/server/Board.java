@@ -19,6 +19,16 @@ import java.util.ArrayList;
  *  - A new board must start out in all untouched squares
  *  - A board cannot have a bomb in a location the user has already
  *      dug. If he digs a bomb, he looses and is disconnected. 
+ *      
+ * Thread Safety:
+ *  - The mutator methods need to be synchronized since we can't 
+ *      have multiple mutations occuring in parallel, since we risk
+ *      violating the rep invariant of the board
+ *  - The accessor methods need to be synchronized so we don't return
+ *      a false state of the board - they need to be atomic operations
+ *  - We only need to lock on this (instance of Board) and not its
+ *      attributes since they are all private, and are only accessed
+ *      via the class methods.  
  * 
  * @author jains
  *
@@ -84,13 +94,88 @@ public class Board {
         
     }
     
+    public synchronized String look() {
+        return USER_BOARD.toString();
+    }
+    
+    /**
+     * Digs at the location x,y. x,y should have not been dug already
+     *  i.e. it should be in the UNTOUCHED or FLAGGED state, otherwise the 
+     *  returned string will represent the state of the board. If the 
+     *  location contains a bomb, a BOOM message will be returned, and the 
+     *  bomb will be removed. Otherwise, the square will be changed to 
+     *  DUG. If it has no neighboring bombs, then it will recursively dig
+     *  surrounding squares until it reaches a square with a neighboring bomb.
+     * @param x int x coord. x >= 0
+     * @param y int y coord. y >= 0
+     * @return a String, representing the state of the board if an invalid
+     *  location is given, or a BOOM message if the user hit a bomb. An empty
+     *  string "" if there was nothing at that location. 
+     */
+    public synchronized String dig(int x, int y) {
+        // Get board at position x, y
+        String userSquare = USER_BOARD.get(y).get(x);
+        assert userSquare.equals(UNTOUCHED) || userSquare.equals(FLAGGED);
+        
+        if (x < 0 || y < 0)
+            return look();
+        
+        String bombSquare = BOMB_BOARD.get(y).get(x);
+        if (bombSquare.equals(BOMB)){
+            // also resets the square to DUG_NO_NEIGHBORS
+            // and updates the neighboring square's numbers. 
+            removeBomb(x, y); 
+            return "BOOM!" + "\n";
+        }
+        else if (bombSquare.equals(NO_BOMB)){
+            // Dig the square
+            String toSet = findAdjacentBombCount(x, y).toString();
+            if (toSet.equals("0"))
+                toSet = DUG_NO_NEIGHBORS;
+            USER_BOARD.get(y).set(x, toSet);
+        }
+        
+        // Should never reach here
+        throw new RuntimeException();
+        
+    }
+    
+    private Integer findAdjacentBombCount(int x, int y) {
+        
+    }
+
+    /**
+     * Flags the square at x,y. Requires that x,y be in an untouched state.
+     * @param x int x coord. x >= 0
+     * @param y int y coord. y >= 0
+     */
+    public synchronized void flag(int x, int y) {
+        assert USER_BOARD.get(y).get(x).equals(UNTOUCHED);
+        USER_BOARD.get(y).set(x, FLAGGED);
+    }
+    
+    /**
+     * Deflags the square at x,y, returning it to the untouched state.
+     *  Requires that x,y already be flagged, and not be in a dug state.
+     * @param x int x coord. x >= 0
+     * @param y int y coord. y >= 0
+     */
+    public synchronized void deflag(int x, int y) {
+        assert USER_BOARD.get(y).get(x).equals(FLAGGED);
+        USER_BOARD.get(y).set(x, UNTOUCHED);
+    }
+    
+    private synchronized void removeBomb(int x, int y){
+        
+    }
+    
     /**
      * Checks rep invariants. 
      *  - USER_BOARD dimentions equal to BOMB_BOARD
      *  - USER_BOARD and BOMB_BOARD contain appropriate states
      * @return boolean true if rep invariants hold, false otherwise. 
      */
-    private boolean checkRep() {
+    private synchronized boolean checkRep() {
         // Check boards have same # of lines. 
         if (USER_BOARD.size() != BOMB_BOARD.size())
             return false;
