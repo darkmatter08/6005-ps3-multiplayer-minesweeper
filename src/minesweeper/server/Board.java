@@ -153,7 +153,7 @@ public class Board {
             }
             // Kill trailing whitespaces before adding EOL
             if (result.endsWith(" "))
-                result = result.trim();
+                result = result.substring(0, result.length()-1);
             result += "\r\n";
         }
         return result;
@@ -193,9 +193,11 @@ public class Board {
             String toSet = findAdjacentBombCount(x, y).toString();
             if (toSet.equals("0")){
                 toSet = DUG_NO_NEIGHBORS;
+                USER_BOARD.get(y).set(x, toSet);
                 recursiveDig(x, y); // TODO add this method.
             }
-            USER_BOARD.get(y).set(x, toSet);
+            else
+                USER_BOARD.get(y).set(x, toSet);
             return look();
         }
         
@@ -215,39 +217,73 @@ public class Board {
         
         Queue<IntPair> toCheck = new LinkedList<IntPair>();
         List<IntPair> checked = new ArrayList<IntPair>();
-     
-        int size = USER_BOARD.size();
-        int xC = x - 1;
-        int yC = y - 1;
-        if(xC >= 0 && yC >= 0) { // bounds ok
-        }else if (xC < 0 && yC < 0){
-            xC++;
-            yC++;
-        }else if (yC < 0){
-            yC++;
-        }else if (xC < 0) {
-            xC++;
+        
+        // add in children of x, y
+        for (IntPair childCoord : getChildren(x,y)){
+            toCheck.add(childCoord);
         }
-
-        // only check until x+1 or size-1, whichever is smaller
-        for (int i = xC; i <= Math.min(size-1, x+1); i++){ 
-            for (int j = yC; j <= Math.min(size-1, y+1); j++){
-                // No bomb, not dug, and no neighboring bombs
-                if (BOMB_BOARD.get(j).get(i).equals(NO_BOMB) 
-                        && USER_BOARD.get(j).get(i).equals(UNTOUCHED) 
-                        && ! checked.contains(new IntPair(i, j))) {
-                    if ((findAdjacentBombCount(i, j) == 0)){
-                        for (IntPair childCoord : getChildren(i,j)){
-                            toCheck.add(childCoord);
-                        }
-                    }
-                    else {
-                        // change square to findAdjancentBombCount
-                        USER_BOARD.get(j).set(i, findAdjacentBombCount(i, j).toString());
+        
+        // x,y already checked
+        checked.add(new IntPair(x, y));
+        
+        while(! toCheck.isEmpty()){
+            IntPair nextCoord = toCheck.poll();
+            int i = nextCoord.numerator; // first value
+            int j = nextCoord.denominator; // second value
+            
+            // No bomb, not dug or flagged, and not already checked
+            if (BOMB_BOARD.get(j).get(i).equals(NO_BOMB) 
+                    && (USER_BOARD.get(j).get(i).equals(UNTOUCHED)
+                     || USER_BOARD.get(j).get(i).equals(FLAGGED))
+                    && ! checked.contains(new IntPair(i, j))) {
+                
+                checked.add(new IntPair(i, j));
+                // No adjacent bombs - add children
+                if ((findAdjacentBombCount(i, j) == 0)){
+                    USER_BOARD.get(j).set(i, DUG_NO_NEIGHBORS);
+                    for (IntPair childCoord : getChildren(i,j)){
+                        toCheck.add(childCoord);
                     }
                 }
+                // don't add children since there are adjacent bombs. 
+                // just update the square to be dug with the adjancentBombCount. 
+                else
+                    USER_BOARD.get(j).set(i, findAdjacentBombCount(i, j).toString());
             }
         }
+        
+//        int size = USER_BOARD.size();
+//        int xC = x - 1;
+//        int yC = y - 1;
+//        if(xC >= 0 && yC >= 0) { // bounds ok
+//        }else if (xC < 0 && yC < 0){
+//            xC++;
+//            yC++;
+//        }else if (yC < 0){
+//            yC++;
+//        }else if (xC < 0) {
+//            xC++;
+//        }
+//
+//        // only check until x+1 or size-1, whichever is smaller
+//        for (int i = xC; i <= Math.min(size-1, x+1); i++){ 
+//            for (int j = yC; j <= Math.min(size-1, y+1); j++){
+//                // No bomb, not dug, and no neighboring bombs
+//                if (BOMB_BOARD.get(j).get(i).equals(NO_BOMB) 
+//                        && USER_BOARD.get(j).get(i).equals(UNTOUCHED) 
+//                        && ! checked.contains(new IntPair(i, j))) {
+//                    if ((findAdjacentBombCount(i, j) == 0)){
+//                        for (IntPair childCoord : getChildren(i,j)){
+//                            toCheck.add(childCoord);
+//                        }
+//                    }
+//                    else {
+//                        // change square to findAdjancentBombCount
+//                        USER_BOARD.get(j).set(i, findAdjacentBombCount(i, j).toString());
+//                    }
+//                }
+//            }
+//        }
     }
     
     private List<IntPair> getChildren(int x, int y) {
