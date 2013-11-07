@@ -9,6 +9,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.ArrayList;
 
+import autograder.TestUtil;
+
 /**
  * Representation of the Minesweeper board. 
  * 
@@ -147,6 +149,9 @@ public class Board {
                 }
                 result += " ";
             }
+            // Kill trailing whitespaces before adding EOL
+            if (result.endsWith(" "))
+                result = result.trim();
             result += "\r\n";
         }
         return result;
@@ -189,6 +194,7 @@ public class Board {
                 recursiveDig(x, y); // TODO add this method.
             }
             USER_BOARD.get(y).set(x, toSet);
+            return look();
         }
         
         // Should never reach here
@@ -207,19 +213,19 @@ public class Board {
         int size = USER_BOARD.size();
         int xC = x - 1;
         int yC = y - 1;
-        if(x >= 0 && y >= 0) { // bounds ok
-        }else if (x < 0 && y < 0){
+        if(xC >= 0 && yC >= 0) { // bounds ok
+        }else if (xC < 0 && yC < 0){
             xC++;
             yC++;
-        }else if (y < 0){
+        }else if (yC < 0){
             yC++;
-        }else if (x < 0) {
+        }else if (xC < 0) {
             xC++;
         }
 
         // only check until x+1 or size-1, whichever is smaller
-        for (int i = xC; xC <= Math.min(size-1, x+1); i++){ 
-            for (int j = yC; yC <= Math.min(size-1, y+1); j++){
+        for (int i = xC; i <= Math.min(size-1, x+1); i++){ 
+            for (int j = yC; j <= Math.min(size-1, y+1); j++){
                 // No bomb, not dug, and no neighboring bombs
                 if (BOMB_BOARD.get(j).get(i).equals(NO_BOMB) 
                         && USER_BOARD.get(j).get(i).equals(UNTOUCHED) 
@@ -240,21 +246,21 @@ public class Board {
         int size = USER_BOARD.size();
         int xC = x - 1;
         int yC = y - 1;
-        if(x >= 0 && y >= 0) { // bounds ok
-        }else if (x < 0 && y < 0){
+        if(xC >= 0 && yC >= 0) { // bounds ok
+        }else if (xC < 0 && yC < 0){
             xC++;
             yC++;
-        }else if (y < 0){
+        }else if (yC < 0){
             yC++;
-        }else if (x < 0) {
+        }else if (xC < 0) {
             xC++;
         }
         
         int bombCount = 0;
         
         // only check until x+1 or size-1, whichever is smaller
-        for (int i = xC; xC <= Math.min(size-1, x+1); i++){ 
-            for (int j = yC; yC <= Math.min(size-1, y+1); j++){
+        for (int i = xC; i <= Math.min(size-1, x+1); i++){ 
+            for (int j = yC; j <= Math.min(size-1, y+1); j++){
                 if (BOMB_BOARD.get(j).get(i).equals(BOMB))
                     bombCount++;
             }
@@ -303,23 +309,24 @@ public class Board {
         int size = USER_BOARD.size();
         int xC = x - 1;
         int yC = y - 1;
-        if(x >= 0 && y >= 0) { // bounds ok
-        }else if (x < 0 && y < 0){
+        if(xC >= 0 && yC >= 0) { // bounds ok
+        }else if (xC < 0 && yC < 0){
             xC++;
             yC++;
-        }else if (y < 0){
+        }else if (yC < 0){
             yC++;
-        }else if (x < 0) {
+        }else if (xC < 0) {
             xC++;
         }
         
-        for (int i = xC; xC <= Math.min(size-1, x+1); i++){ // only check until x+1 or size-1
-            for (int j = yC; yC <= Math.min(size-1, y+1); j++){
+        for (int i = xC; i <= Math.min(size-1, x+1); i++){ // only check until x+1 or size-1
+            for (int j = yC; j <= Math.min(size-1, y+1); j++){
                 String toSet1 = findAdjacentBombCount(i, j).toString();
                 if (toSet1.equals("0")){
                     toSet1 = DUG_NO_NEIGHBORS;
                 }
-                USER_BOARD.get(j).set(i, toSet1);
+                if (! (USER_BOARD.get(j).get(i).equals(UNTOUCHED)))
+                    USER_BOARD.get(j).set(i, toSet1);
             }
         }
     }
@@ -367,7 +374,8 @@ public class Board {
         return BOMB_BOARD;
     }
     public static void main(String args[]) throws IOException{
-        File file = new File("/Users/jains/Documents/test.txt");
+//        File file = new File("/Users/jains/Documents/test.txt");
+        
 //        Charset charset = Charset.forName("US-ASCII");
 //        try (BufferedReader reader = Files.newBufferedReader(file.toPath(), charset)) {
 //            String line = null;
@@ -377,8 +385,13 @@ public class Board {
 //        } catch (IOException x) {
 //            System.err.format("IOException: %s%n", x);
 //        }
+        
+        File file = new File(TestUtil.getResourcePathName("autograder/resources/test.txt"));
+        
         Board b = new Board(file);
         System.out.println(b.look());
         System.out.println(b.getbombs());
+        String path = TestUtil.getResourcePathName("autograder/resources/" + "board_file_5");
+        System.out.println(path);
     }
 }
