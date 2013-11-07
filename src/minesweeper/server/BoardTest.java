@@ -68,6 +68,20 @@ public class BoardTest {
             b.dig(1, 1);
             String out = b.look();
             String expected = "- - -\r\n- 3 -\r\n- - -\r\n";
+//            System.out.println(out);
+//            System.out.println(expected);
+            assertEquals(out, expected);
+        }catch (IOException e){ /* do nothing */ }
+    }
+    
+    @Test
+    public void recursiveDigTest() {
+        try{
+            File file = new File(TestUtil.getResourcePathName("autograder/resources/board_file_5"));
+            Board b = new Board(file);
+            b.dig(0, 0);
+            String out = b.look();
+            String expected = "- - -\r\n- 3 -\r\n- - -\r\n";
             System.out.println(out);
             System.out.println(expected);
             assertEquals(out, expected);
