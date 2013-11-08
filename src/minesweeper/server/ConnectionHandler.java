@@ -62,8 +62,8 @@ public class ConnectionHandler implements Runnable{
                 if (output == null){
                     out.println("Try again. Bad input"); 
                 } else if (output.equals("BOOM!\n") && ! debug) {
-                    closeConnection(); break; // TODO weird
-                } else if (output.equals("")) {
+                    out.println(output); closeConnection(); break; // TODO weird
+                } else if (output.equals("")) { // bye case
                     closeConnection(); break;
                 } else { 
                     out.println(output);
