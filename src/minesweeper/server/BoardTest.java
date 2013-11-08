@@ -19,6 +19,8 @@ public class BoardTest {
      *      - dig on neighbor to 1 bomb
      *      - dig on neighbor to many bombs
      *      - dig recursive
+     *  - Flag and Unflag
+     *  - Number of players - add, remove
      */
     
     @Test
@@ -79,15 +81,14 @@ public class BoardTest {
         try{
             File file = new File(TestUtil.getResourcePathName("autograder/resources/test2.txt"));
             Board b = new Board(file);
-            System.out.println(b.look());
-            System.out.println(b.getbombs());
+//            System.out.println(b.look());
             b.dig(0, 0);
             String out = b.look();
             String expected  = "       \r\n  1 1 1\r\n  1 - -\r\n  1 - -\r\n";
             //String expected = "      1 1 1  \r\n      1 - 1  \r\n      1 1 1  \r\n             \r\n             \r\n1 1          \r\n- 1          \r\n";
             //String expected = "- - -\r\n- 3 -\r\n- - -\r\n";
-            System.out.println(out);
-            System.out.println(expected);
+//            System.out.println(out);
+//            System.out.println(expected);
             assertEquals(out, expected);
         }catch (IOException e){ e.printStackTrace(); }
     }
@@ -119,5 +120,18 @@ public class BoardTest {
 //            System.out.println(expected);
             assertEquals(out, expected);
         }catch (IOException e){ /* do nothing */ }
+    }
+    
+    @Test
+    public void playersTest(){
+        Board b = new Board(10);
+        b.addPlayer();
+        assertEquals(b.getNumberOfPlayers(), 1);
+        b.addPlayer();
+        assertEquals(b.getNumberOfPlayers(), 2);
+        b.addPlayer();
+        assertEquals(b.getNumberOfPlayers(), 3);
+        b.removePlayer();
+        assertEquals(b.getNumberOfPlayers(), 2);
     }
 }

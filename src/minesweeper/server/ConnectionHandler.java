@@ -59,16 +59,18 @@ public class ConnectionHandler implements Runnable{
         try {
             for (String line = in.readLine(); line != null; line = in.readLine()) {
                 String output = handleRequest(line);
-                if (output.equals("BOOM!\n") && ! debug) {
+                if (output == null){
+                    out.println("Try again. Bad input"); 
+                } else if (output.equals("BOOM!\n") && ! debug) {
                     closeConnection(); break; // TODO weird
                 } else if (output.equals("")) {
                     closeConnection(); break;
-                } else { // null case = bye case
-                    //closeConnection(); break;
+                } else { 
                     out.println(output);
                 }
             }
         } finally {
+            b.removePlayer();
             out.close();
             in.close();
             socket.close(); // TODO not sure about this
@@ -119,6 +121,7 @@ public class ConnectionHandler implements Runnable{
      * Closes the connection, as well as the BufferedReader, and the printWriter.
      */
     private void closeConnection(){
+        b.removePlayer();
         try{
             out.close();
             in.close();

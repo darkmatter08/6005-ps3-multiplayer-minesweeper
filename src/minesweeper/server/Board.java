@@ -458,33 +458,11 @@ public class Board {
         numberOfPlayers++;
     }
     
-    public synchronized int getNumberOfPlayers() {
-        return numberOfPlayers;
+    public synchronized void removePlayer() {
+        numberOfPlayers--;
     }
     
-    // REMOVE
-    public List<?> getbombs(){
-        return BOMB_BOARD;
-    }
-    public static void main(String args[]) throws IOException{
-//        File file = new File("/Users/jains/Documents/test.txt");
-        
-//        Charset charset = Charset.forName("US-ASCII");
-//        try (BufferedReader reader = Files.newBufferedReader(file.toPath(), charset)) {
-//            String line = null;
-//            while ((line = reader.readLine()) != null) {
-//                System.out.println(line);
-//            }
-//        } catch (IOException x) {
-//            System.err.format("IOException: %s%n", x);
-//        }
-        
-        File file = new File(TestUtil.getResourcePathName("autograder/resources/test.txt"));
-        
-        Board b = new Board(file);
-        System.out.println(b.look());
-        System.out.println(b.getbombs());
-        String path = TestUtil.getResourcePathName("autograder/resources/" + "board_file_5");
-        System.out.println(path);
+    public synchronized int getNumberOfPlayers() {
+        return numberOfPlayers;
     }
 }
