@@ -47,7 +47,7 @@ public class MinesweeperServer {
 //        }
 //          
             // A client is trying to connect, create a new thread for him.
-            board.addPlayer();
+            //board.addPlayer();
             new Thread(new ConnectionHandler(socket, debug, board)).start();
             
 //            // A client is trying to connect, create a new thread for him.
@@ -177,7 +177,7 @@ public class MinesweeperServer {
     public static void main(String[] args) {
         // Command-line argument parsing is provided. Do not change this method.
         boolean debug = false;
-        int port = 4441; // default port
+        int port = 4443; // default port
         Integer size = 10; // default size
         File file = null;
 

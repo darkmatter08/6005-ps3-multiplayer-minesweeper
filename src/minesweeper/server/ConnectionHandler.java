@@ -26,6 +26,7 @@ public class ConnectionHandler implements Runnable{
         this.socket = s;
         this.debug = debug;
         this.b = b;
+        this.b.addPlayer();
     }
     
     public void run() {
