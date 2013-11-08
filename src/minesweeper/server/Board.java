@@ -37,6 +37,9 @@ import autograder.TestUtil;
  *  - We only need to lock on this (instance of Board) and not its
  *      attributes since they are all private, and are only accessed
  *      via the class methods.  
+ *  - Every ConnectionHandler is assigned to a client. Since all the 
+ *      ConnectionHandlers work on a single instance of the Board, as
+ *      long as the Board is threadsafe, the whole server is threadsafe. 
  * 
  * @author jains
  *
@@ -451,11 +454,11 @@ public class Board {
         return true;
     }
     
-    public void addPlayer() {
+    public synchronized void addPlayer() {
         numberOfPlayers++;
     }
     
-    public int getNumberOfPlayers() {
+    public synchronized int getNumberOfPlayers() {
         return numberOfPlayers;
     }
     

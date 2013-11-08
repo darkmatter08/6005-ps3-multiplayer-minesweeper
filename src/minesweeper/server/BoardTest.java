@@ -83,7 +83,8 @@ public class BoardTest {
             System.out.println(b.getbombs());
             b.dig(0, 0);
             String out = b.look();
-            String expected = "      1 1 1  \r\n      1 - 1  \r\n      1 1 1  \r\n             \r\n             \r\n1 1          \r\n- 1          \r\n";
+            String expected  = "       \r\n  1 1 1\r\n  1 - -\r\n  1 - -\r\n";
+            //String expected = "      1 1 1  \r\n      1 - 1  \r\n      1 1 1  \r\n             \r\n             \r\n1 1          \r\n- 1          \r\n";
             //String expected = "- - -\r\n- 3 -\r\n- - -\r\n";
             System.out.println(out);
             System.out.println(expected);
