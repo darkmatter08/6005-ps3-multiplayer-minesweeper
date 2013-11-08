@@ -67,6 +67,8 @@ public class Board {
     private final String NO_BOMB = "E";
     private final String BOMB = "B";
     
+    private int numberOfPlayers;
+    
     /**
      * Constructor for a random board. Every square has a 25% 
      *  probability of having a bomb
@@ -151,7 +153,7 @@ public class Board {
                 }
                 result += " ";
             }
-            // Kill trailing whitespaces before adding EOL
+            // Kill trailing whitespace before adding EOL
             if (result.endsWith(" "))
                 result = result.substring(0, result.length()-1);
             result += "\r\n";
@@ -170,8 +172,8 @@ public class Board {
      * @param x int x coord. x >= 0
      * @param y int y coord. y >= 0
      * @return a String, representing the state of the board if an invalid
-     *  location is given, or a BOOM message if the user hit a bomb. An empty
-     *  string "" if there was nothing at that location. 
+     *  location is given, or a BOOM message if the user hit a bomb. If there
+     *  was nothing at that location, then the state of the board is returned. 
      */
     public synchronized String dig(int x, int y) {
         // Get board at position x, y
@@ -186,6 +188,7 @@ public class Board {
             // also resets the square to DUG_NO_NEIGHBORS
             // and updates the neighboring square's numbers. 
             removeBomb(x, y); 
+            dig(x, y);
             return "BOOM!" + "\n";
         }
         else if (bombSquare.equals(NO_BOMB)){
@@ -194,7 +197,7 @@ public class Board {
             if (toSet.equals("0")){
                 toSet = DUG_NO_NEIGHBORS;
                 USER_BOARD.get(y).set(x, toSet);
-                recursiveDig(x, y); // TODO add this method.
+                recursiveDig(x, y);
             }
             else
                 USER_BOARD.get(y).set(x, toSet);
@@ -242,7 +245,8 @@ public class Board {
                 if ((findAdjacentBombCount(i, j) == 0)){
                     USER_BOARD.get(j).set(i, DUG_NO_NEIGHBORS);
                     for (IntPair childCoord : getChildren(i,j)){
-                        toCheck.add(childCoord);
+                        if (! checked.contains(childCoord))
+                            toCheck.add(childCoord);
                     }
                 }
                 // don't add children since there are adjacent bombs. 
@@ -348,10 +352,12 @@ public class Board {
      * Flags the square at x,y. Requires that x,y be in an untouched state.
      * @param x int x coord. x >= 0
      * @param y int y coord. y >= 0
+     * @return String representing the state of the board.
      */
-    public synchronized void flag(int x, int y) {
+    public synchronized String flag(int x, int y) {
         assert USER_BOARD.get(y).get(x).equals(UNTOUCHED);
         USER_BOARD.get(y).set(x, FLAGGED);
+        return look();
     }
     
     /**
@@ -359,10 +365,12 @@ public class Board {
      *  Requires that x,y already be flagged, and not be in a dug state.
      * @param x int x coord. x >= 0
      * @param y int y coord. y >= 0
+     * @return String representing the state of the board.
      */
-    public synchronized void deflag(int x, int y) {
+    public synchronized String deflag(int x, int y) {
         assert USER_BOARD.get(y).get(x).equals(FLAGGED);
         USER_BOARD.get(y).set(x, UNTOUCHED);
+        return look();
     }
     
     /**
@@ -443,6 +451,13 @@ public class Board {
         return true;
     }
     
+    public void addPlayer() {
+        numberOfPlayers++;
+    }
+    
+    public int getNumberOfPlayers() {
+        return numberOfPlayers;
+    }
     
     // REMOVE
     public List<?> getbombs(){

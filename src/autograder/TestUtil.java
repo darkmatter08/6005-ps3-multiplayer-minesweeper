@@ -11,7 +11,7 @@ import minesweeper.server.MinesweeperServer;
 
 public class TestUtil {
     
-    private static final int port = 11;// ... a random port ...
+    private static final int port = 1101;// ... a random port ...
     private static final String portStr = Integer.toString(port);
     
     /**

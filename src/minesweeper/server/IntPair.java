@@ -4,7 +4,7 @@ package minesweeper.server;
  * Represents an Integer Pair.
  * Borrowed from my abcplayer project implementation.
  */
-public class IntPair implements Comparable, Cloneable {
+public class IntPair implements Cloneable {
 	public final int numerator;
     public final int denominator; 
     
@@ -54,20 +54,20 @@ public class IntPair implements Comparable, Cloneable {
 		return true;
 	}
 
-	@Override
-	public int compareTo(Object arg0) {
-		if(arg0.getClass() != this.getClass())
-			throw new RuntimeException("Invalid comparision. Must be of type IntPair");
-		IntPair other = (IntPair) arg0;
-		double thisValue = this.getValue();
-		double otherValue = other.getValue();
-		if (thisValue > otherValue)
-			return 1;
-		else if (thisValue == otherValue)
-			return 0;
-		else
-			return -1;
-	}
+//	@Override
+//	public int compareTo(Object arg0) {
+//		if(arg0.getClass() != this.getClass())
+//			throw new RuntimeException("Invalid comparision. Must be of type IntPair");
+//		IntPair other = (IntPair) arg0;
+//		double thisValue = this.getValue();
+//		double otherValue = other.getValue();
+//		if (thisValue > otherValue)
+//			return 1;
+//		else if (thisValue == otherValue)
+//			return 0;
+//		else
+//			return -1;
+//	}
 	
 	@Override
 	public IntPair clone(){
@@ -85,6 +85,10 @@ public class IntPair implements Comparable, Cloneable {
 		// Tolerance value used to avoid problems in double equals. 
 		final double TOLERANCE = 0.00001;
 		return Math.abs(d1 - d2) < TOLERANCE;
+	}
+	
+	public String toString(){
+	    return "(" + numerator + ", " + denominator + ")"; 
 	}
 
 }

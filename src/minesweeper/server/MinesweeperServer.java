@@ -10,15 +10,18 @@ public class MinesweeperServer {
      * True if the server should _not_ disconnect a client after a BOOM message.
      */
     private final boolean debug;
+    
+    private final Board board;
 
     /**
      * Make a MinesweeperServer that listens for connections on port.
      * 
      * @param port port number, requires 0 <= port <= 65535
      */
-    public MinesweeperServer(int port, boolean debug) throws IOException {
+    public MinesweeperServer(int port, boolean debug, Board b) throws IOException {
         serverSocket = new ServerSocket(port);
         this.debug = debug;
+        this.board = b;
     }
 
     /**
@@ -42,25 +45,29 @@ public class MinesweeperServer {
 //                socket.close();
 //            }
 //        }
-//        
+//          
             // A client is trying to connect, create a new thread for him.
-            new Thread(){
-                public void run() {
-                    // handle the client
-                    try {
-                        handleConnection(socket);
-                    } catch (IOException e) {
-                        e.printStackTrace(); // but don't terminate serve()
-                    } finally {
-                        try {
-                            socket.close();
-                        } catch (IOException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }.start();
+            board.addPlayer();
+            new Thread(new ConnectionHandler(socket, debug, board)).start();
+            
+//            // A client is trying to connect, create a new thread for him.
+//            new Thread(){
+//                public void run() {
+//                    // handle the client
+//                    try {
+//                        handleConnection(socket);
+//                    } catch (IOException e) {
+//                        e.printStackTrace(); // but don't terminate serve()
+//                    } finally {
+//                        try {
+//                            socket.close();
+//                        } catch (IOException e) {
+//                            // TODO Auto-generated catch block
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                }
+//            }.start();
         }
     }
 
@@ -107,14 +114,17 @@ public class MinesweeperServer {
         } else if (tokens[0].equals("help")) {
             // 'help' request
             // TODO Question 5
-        } else if (tokens[0].equals("bye")) {
+        } else if (tokens[0].equals("bye")) { // could be disconnected
             // 'bye' request
             // TODO Question 5
         } else {
             int x = Integer.parseInt(tokens[1]);
             int y = Integer.parseInt(tokens[2]);
             if (tokens[0].equals("dig")) {
-                // 'dig x y' request
+                // 'dig x y' request // could be disconnected
+                String out = board.dig(x, y);
+                if (out.equals("BOOM!\n") && ! debug) //disconnect
+                    return "";
                 // TODO Question 5
             } else if (tokens[0].equals("flag")) {
                 // 'flag x y' request
@@ -167,7 +177,7 @@ public class MinesweeperServer {
     public static void main(String[] args) {
         // Command-line argument parsing is provided. Do not change this method.
         boolean debug = false;
-        int port = 4444; // default port
+        int port = 4440; // default port
         Integer size = 10; // default size
         File file = null;
 
@@ -230,8 +240,16 @@ public class MinesweeperServer {
     public static void runMinesweeperServer(boolean debug, File file, Integer size, int port) throws IOException {
         
         // TODO: Continue your implementation here.
+        Board b; 
+        if (file != null)
+            b = new Board(file);
+        else if (size != null)
+            b = new Board(size);
+        // both options are not provided. create a 5x5 board
+        else
+            b = new Board(5);
         
-        MinesweeperServer server = new MinesweeperServer(port, debug);
+        MinesweeperServer server = new MinesweeperServer(port, debug, b);
         server.serve();
     }
 }

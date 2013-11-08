@@ -77,7 +77,7 @@ public class BoardTest {
     @Test
     public void recursiveDigTest() {
         try{
-            File file = new File(TestUtil.getResourcePathName("autograder/resources/board_file_5"));
+            File file = new File(TestUtil.getResourcePathName("autograder/resources/test2.txt"));
             Board b = new Board(file);
             System.out.println(b.look());
             System.out.println(b.getbombs());
@@ -88,7 +88,35 @@ public class BoardTest {
             System.out.println(out);
             System.out.println(expected);
             assertEquals(out, expected);
+        }catch (IOException e){ e.printStackTrace(); }
+    }
+    
+    @Test
+    public void flagTest() {
+        try{
+            File file = new File(TestUtil.getResourcePathName("autograder/resources/test.txt"));
+            Board b = new Board(file);
+            b.flag(1, 1);
+            String out = b.look();
+            String expected = "- - -\r\n- F -\r\n- - -\r\n";
+//            System.out.println(out);
+//            System.out.println(expected);
+            assertEquals(out, expected);
         }catch (IOException e){ /* do nothing */ }
     }
-
+    
+    @Test
+    public void deflagTest() {
+        try{
+            File file = new File(TestUtil.getResourcePathName("autograder/resources/test.txt"));
+            Board b = new Board(file);
+            b.flag(1, 1);
+            b.deflag(1, 1);
+            String out = b.look();
+            String expected = "- - -\r\n- - -\r\n- - -\r\n";
+//            System.out.println(out);
+//            System.out.println(expected);
+            assertEquals(out, expected);
+        }catch (IOException e){ /* do nothing */ }
+    }
 }
