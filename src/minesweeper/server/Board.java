@@ -127,6 +127,7 @@ public class Board {
             }
             USER_BOARD.add(userLine);
         }
+        assert checkRep();
     }
     
     public synchronized String look() {
@@ -157,10 +158,10 @@ public class Board {
     
     /**
      * Digs at the location x,y. x,y should have not been dug already
-     *  i.e. it should be in the UNTOUCHED or FLAGGED state, otherwise the 
-     *  returned string will represent the state of the board. If the 
-     *  location contains a bomb, a BOOM message will be returned, and the 
-     *  bomb will be removed. Otherwise, the square will be changed to 
+     *  i.e. it should be in the UNTOUCHED state, otherwise the 
+     *  returned string will represent the state of the board (including FLAGGED
+     *  squares). If the location contains a bomb, a BOOM message will be returned, 
+     *  and the bomb will be removed. Otherwise, the square will be changed to 
      *  DUG. If it has no neighboring bombs, then it will recursively dig
      *  surrounding squares until it reaches a square with a neighboring bomb.
      * @param x int x coord. x >= 0
@@ -174,7 +175,7 @@ public class Board {
         String userSquare = USER_BOARD.get(y).get(x);
         assert userSquare.equals(UNTOUCHED) || userSquare.equals(FLAGGED);
         
-        if (x < 0 || y < 0)
+        if (x < 0 || y < 0 || userSquare.equals(FLAGGED))
             return look();
         
         String bombSquare = BOMB_BOARD.get(y).get(x);
@@ -230,8 +231,7 @@ public class Board {
             
             // No bomb, not dug or flagged, and not already checked
             if (BOMB_BOARD.get(j).get(i).equals(NO_BOMB) 
-                    && (USER_BOARD.get(j).get(i).equals(UNTOUCHED)
-                     || USER_BOARD.get(j).get(i).equals(FLAGGED))
+                    && USER_BOARD.get(j).get(i).equals(UNTOUCHED)
                     && ! checked.contains(new IntPair(i, j))) {
                 
                 checked.add(new IntPair(i, j));

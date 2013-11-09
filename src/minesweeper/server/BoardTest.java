@@ -19,6 +19,10 @@ public class BoardTest {
      *      - dig on neighbor to 1 bomb
      *      - dig on neighbor to many bombs
      *      - dig recursive
+     *      - dig on flag
+     *      - dig on unflagged that was previously flagged
+     *      - recursive dig shouldn't dig up a flagged square
+     *          regardless of having a bomb or not. 
      *  - Flag and Unflag
      *  - Number of players - add, remove
      */
@@ -78,6 +82,76 @@ public class BoardTest {
             b.dig(0, 0);
             String out = b.look();
             String expected  = "       \r\n  1 1 1\r\n  1 - -\r\n  1 - -\r\n";
+            assertEquals(out, expected);
+        }catch (IOException e){ fail("Test did not run"); e.printStackTrace(); }
+    }
+    
+    @Test
+    public void digOnFlagTest() {
+        try{
+            File file = new File(TestUtil.getResourcePathName("autograder/resources/test.txt"));
+            Board b = new Board(file);
+            b.flag(0, 0);
+            b.dig(0, 0);
+            String out = b.look();
+            String expected  = "F - -\r\n- - -\r\n- - -\r\n";
+            assertEquals(out, expected);
+        }catch (IOException e){ fail("Test did not run"); e.printStackTrace(); }
+    }
+    
+    @Test
+    public void digOnUnflagTest() {
+        try{
+            File file = new File(TestUtil.getResourcePathName("autograder/resources/test.txt"));
+            Board b = new Board(file);
+            b.flag(0, 0);
+            b.dig(0, 0);
+            b.deflag(0, 0);
+            b.dig(0, 0);
+            String out = b.look();
+            String expected  = "2 - -\r\n- - -\r\n- - -\r\n";
+            assertEquals(out, expected);
+        }catch (IOException e){ fail("Test did not run"); e.printStackTrace(); }
+    }
+    
+    @Test
+    public void flagNotDugRecursiveDigTest() {
+        try{
+            File file = new File(TestUtil.getResourcePathName("autograder/resources/test2.txt"));
+            Board b = new Board(file);
+            b.flag(1, 1);
+            b.dig(0, 0);
+            String out = b.look();
+            String expected  = "       \r\n  F 1 1\r\n  1 - -\r\n  1 - -\r\n";
+            assertEquals(out, expected);
+        }catch (IOException e){ fail("Test did not run"); e.printStackTrace(); }
+    }
+
+    @Test
+    public void flagWallRecursiveDigTest() {
+        try{
+            File file = new File(TestUtil.getResourcePathName("autograder/resources/test2.txt"));
+            Board b = new Board(file);
+            b.flag(2, 0);
+            b.flag(2, 1);
+            b.dig(0, 0);
+            String out = b.look();
+            String expected  = "    F -\r\n  1 F -\r\n  1 - -\r\n  1 - -\r\n";
+            assertEquals(out, expected);
+        }catch (IOException e){ fail("Test did not run"); e.printStackTrace(); }
+    }
+    
+    @Test
+    public void bigFlagWallRecursiveDigTest() {
+        try{
+            File file = new File(TestUtil.getResourcePathName("autograder/resources/test2.txt"));
+            Board b = new Board(file);
+            b.flag(1, 0);
+            b.flag(1, 1);
+            b.flag(1, 2);
+            b.dig(0, 0);
+            String out = b.look();
+            String expected  = "  F - -\r\n  F - -\r\n  F - -\r\n  1 - -\r\n";
             assertEquals(out, expected);
         }catch (IOException e){ fail("Test did not run"); e.printStackTrace(); }
     }
