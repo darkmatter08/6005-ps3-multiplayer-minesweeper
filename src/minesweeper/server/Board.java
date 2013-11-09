@@ -281,7 +281,7 @@ public class Board {
         }
         return children;
     }
-
+    
     /**
      * Finds the space at x,y's bomb hint number
      * @param x int x coord. x >= 0
@@ -289,27 +289,16 @@ public class Board {
      * @return Integer 0-8 
      */
     private Integer findAdjacentBombCount(int x, int y) {
-        int size = USER_BOARD.size();
-        int xC = x - 1;
-        int yC = y - 1;
-        if(xC >= 0 && yC >= 0) { // bounds ok
-        }else if (xC < 0 && yC < 0){
-            xC++;
-            yC++;
-        }else if (yC < 0){
-            yC++;
-        }else if (xC < 0) {
-            xC++;
-        }
+        List<IntPair> children = getChildren(x, y);
         
         int bombCount = 0;
         
-        // only check until x+1 or size-1, whichever is smaller
-        for (int i = xC; i <= Math.min(size-1, x+1); i++){ 
-            for (int j = yC; j <= Math.min(size-1, y+1); j++){
-                if (BOMB_BOARD.get(j).get(i).equals(BOMB))
-                    bombCount++;
-            }
+        for (IntPair child : children) {
+            int i = child.numerator;
+            int j = child.denominator;
+            
+            if (BOMB_BOARD.get(j).get(i).equals(BOMB))
+                bombCount++;
         }
         
         return bombCount;
