@@ -251,6 +251,12 @@ public class Board {
         }
     }
     
+    /**
+     * @param x int x coord. x >= 0
+     * @param y int y coord. y >= 0
+     * @return List<IntPair> representing the coord. pairs that are children
+     *  of x,y. Includes x,y.
+     */
     private List<IntPair> getChildren(int x, int y) {
         List<IntPair> children = new ArrayList<IntPair>();
         
@@ -412,14 +418,23 @@ public class Board {
         return true;
     }
     
+    /**
+     * Adds a player to this board
+     */
     public synchronized void addPlayer() {
         numberOfPlayers++;
     }
     
+    /**
+     * Removes a player from this board.
+     */
     public synchronized void removePlayer() {
         numberOfPlayers--;
     }
     
+    /**
+     * @return int representing the current number of players
+     */
     public synchronized int getNumberOfPlayers() {
         return numberOfPlayers;
     }
