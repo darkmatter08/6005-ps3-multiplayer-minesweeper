@@ -4,6 +4,13 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 
+/**
+ * MinesweeperServer sets up the server, depending on the command line options passed on start.
+ * MinesweeperServer receives a client connection request and instantiates a ConnectionHandler
+ *  to take care of the client. 
+ * @author jains
+ *
+ */
 public class MinesweeperServer {
     private final ServerSocket serverSocket;
     /**
@@ -35,107 +42,9 @@ public class MinesweeperServer {
         while (true) {
             // block until a client connects
             final Socket socket = serverSocket.accept();
-
-//            // handle the client
-//            try {
-//                handleConnection(socket);
-//            } catch (IOException e) {
-//                e.printStackTrace(); // but don't terminate serve()
-//            } finally {
-//                socket.close();
-//            }
-//        }
-//          
-            // A client is trying to connect, create a new thread for him.
-            //board.addPlayer();
+            // Make a new thread for him
             new Thread(new ConnectionHandler(socket, debug, board)).start();
-            
-//            // A client is trying to connect, create a new thread for him.
-//            new Thread(){
-//                public void run() {
-//                    // handle the client
-//                    try {
-//                        handleConnection(socket);
-//                    } catch (IOException e) {
-//                        e.printStackTrace(); // but don't terminate serve()
-//                    } finally {
-//                        try {
-//                            socket.close();
-//                        } catch (IOException e) {
-//                            // TODO Auto-generated catch block
-//                            e.printStackTrace();
-//                        }
-//                    }
-//                }
-//            }.start();
         }
-    }
-
-    /**
-     * Handle a single client connection. Returns when client disconnects.
-     * 
-     * @param socket socket where the client is connected
-     * @throws IOException if connection has an error or terminates unexpectedly
-     */
-    private void handleConnection(Socket socket) throws IOException {
-        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-
-        try {
-            for (String line = in.readLine(); line != null; line = in.readLine()) {
-                String output = handleRequest(line);
-                if (output != null) {
-                    out.println(output);
-                }
-            }
-        } finally {
-            out.close();
-            in.close();
-        }
-    }
-
-    /**
-     * Handler for client input, performing requested operations and returning an output message.
-     * 
-     * @param input message from client
-     * @return message to client
-     */
-    private String handleRequest(String input) {
-        String regex = "(look)|(dig -?\\d+ -?\\d+)|(flag -?\\d+ -?\\d+)|"
-                + "(deflag -?\\d+ -?\\d+)|(help)|(bye)";
-        if ( ! input.matches(regex)) {
-            // invalid input
-            return null;
-        }
-        String[] tokens = input.split(" ");
-        if (tokens[0].equals("look")) {
-            // 'look' request
-            // TODO Question 5
-        } else if (tokens[0].equals("help")) {
-            // 'help' request
-            // TODO Question 5
-        } else if (tokens[0].equals("bye")) { // could be disconnected
-            // 'bye' request
-            // TODO Question 5
-        } else {
-            int x = Integer.parseInt(tokens[1]);
-            int y = Integer.parseInt(tokens[2]);
-            if (tokens[0].equals("dig")) {
-                // 'dig x y' request // could be disconnected
-                String out = board.dig(x, y);
-                if (out.equals("BOOM!\n") && ! debug) //disconnect
-                    return "";
-                // TODO Question 5
-            } else if (tokens[0].equals("flag")) {
-                // 'flag x y' request
-                // TODO Question 5
-            } else if (tokens[0].equals("deflag")) {
-                // 'deflag x y' request
-                // TODO Question 5
-            }
-        }
-        // Should never get here--make sure to return in each of the valid cases above.
-        throw new UnsupportedOperationException();
     }
 
     /**
@@ -238,16 +147,14 @@ public class MinesweeperServer {
      * @param port The network port on which the server should listen.
      */
     public static void runMinesweeperServer(boolean debug, File file, Integer size, int port) throws IOException {
-        
-        // TODO: Continue your implementation here.
         Board b; 
         if (file != null)
             b = new Board(file);
         else if (size != null)
             b = new Board(size);
-        // both options are not provided. create a 5x5 board
+        // both options are not provided. create a 10x10 board
         else
-            b = new Board(5);
+            b = new Board(10);
         
         MinesweeperServer server = new MinesweeperServer(port, debug, b);
         server.serve();

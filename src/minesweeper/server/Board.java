@@ -104,15 +104,6 @@ public class Board {
      * @throws IOException In case file is invalid, or contains malformed input
      */
     public Board(File file) throws IOException{
-//        Charset charset = Charset.forName("US-ASCII");
-//        try (BufferedReader reader = Files.newBufferedReader(file.toPath(), charset)) {
-//            String line = null;
-//            while ((line = reader.readLine()) != null) {
-//                System.out.println(line);
-//            }
-//        } catch (IOException x) {
-//            System.err.format("IOException: %s%n", x);
-//        }
         Charset charset = Charset.forName("US-ASCII");
         BufferedReader reader = Files.newBufferedReader(file.toPath(), charset);
         String line = null; 
@@ -258,39 +249,6 @@ public class Board {
                     USER_BOARD.get(j).set(i, findAdjacentBombCount(i, j).toString());
             }
         }
-        
-//        int size = USER_BOARD.size();
-//        int xC = x - 1;
-//        int yC = y - 1;
-//        if(xC >= 0 && yC >= 0) { // bounds ok
-//        }else if (xC < 0 && yC < 0){
-//            xC++;
-//            yC++;
-//        }else if (yC < 0){
-//            yC++;
-//        }else if (xC < 0) {
-//            xC++;
-//        }
-//
-//        // only check until x+1 or size-1, whichever is smaller
-//        for (int i = xC; i <= Math.min(size-1, x+1); i++){ 
-//            for (int j = yC; j <= Math.min(size-1, y+1); j++){
-//                // No bomb, not dug, and no neighboring bombs
-//                if (BOMB_BOARD.get(j).get(i).equals(NO_BOMB) 
-//                        && USER_BOARD.get(j).get(i).equals(UNTOUCHED) 
-//                        && ! checked.contains(new IntPair(i, j))) {
-//                    if ((findAdjacentBombCount(i, j) == 0)){
-//                        for (IntPair childCoord : getChildren(i,j)){
-//                            toCheck.add(childCoord);
-//                        }
-//                    }
-//                    else {
-//                        // change square to findAdjancentBombCount
-//                        USER_BOARD.get(j).set(i, findAdjacentBombCount(i, j).toString());
-//                    }
-//                }
-//            }
-//        }
     }
     
     private List<IntPair> getChildren(int x, int y) {
