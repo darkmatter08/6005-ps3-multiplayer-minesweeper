@@ -15,7 +15,7 @@ public class IntPair implements Cloneable {
     
     /**
      * @return double a representation of the quotient of the
-     * 	numerator and denominator
+     * 	x and y
      */
     // @cr where ever this is used to compare two values, we should use compareTo()
     public double getValue() {
@@ -35,7 +35,7 @@ public class IntPair implements Cloneable {
 	}
     
     /**
-     * Two IntPairs are equal if they have the same numerator and denominator
+     * Two IntPairs are equal if they have the same x and y
      * @return boolean true if the objects are equal, false otherwise
      */
 	@Override
