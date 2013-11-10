@@ -5,12 +5,12 @@ package minesweeper.server;
  * Borrowed from my abcplayer project implementation.
  */
 public class IntPair implements Cloneable {
-	public final int numerator;
-    public final int denominator; 
+	public final int x;
+    public final int y; 
     
-    public IntPair(int num, int denom){
-    	this.denominator = denom;
-    	this.numerator = num;
+    public IntPair(int x, int y){
+    	this.y = y;
+    	this.x = x;
     }
     
     /**
@@ -19,7 +19,7 @@ public class IntPair implements Cloneable {
      */
     // @cr where ever this is used to compare two values, we should use compareTo()
     public double getValue() {
-    	return ((double) this.numerator) / this.denominator;
+    	return ((double) this.x) / this.y;
     }
     
     /**
@@ -29,8 +29,8 @@ public class IntPair implements Cloneable {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + denominator;
-		result = prime * result + numerator;
+		result = prime * result + y;
+		result = prime * result + x;
 		return result;
 	}
     
@@ -47,31 +47,16 @@ public class IntPair implements Cloneable {
 		if (getClass() != obj.getClass())
 			return false;
 		IntPair other = (IntPair) obj;
-		if (denominator != other.denominator)
+		if (y != other.y)
 			return false;
-		if (numerator != other.numerator)
+		if (x != other.x)
 			return false;
 		return true;
 	}
-
-//	@Override
-//	public int compareTo(Object arg0) {
-//		if(arg0.getClass() != this.getClass())
-//			throw new RuntimeException("Invalid comparision. Must be of type IntPair");
-//		IntPair other = (IntPair) arg0;
-//		double thisValue = this.getValue();
-//		double otherValue = other.getValue();
-//		if (thisValue > otherValue)
-//			return 1;
-//		else if (thisValue == otherValue)
-//			return 0;
-//		else
-//			return -1;
-//	}
 	
 	@Override
 	public IntPair clone(){
-		return new IntPair(this.numerator, this.denominator);
+		return new IntPair(this.x, this.y);
 	}
 	
 	/**
@@ -88,7 +73,7 @@ public class IntPair implements Cloneable {
 	}
 	
 	public String toString(){
-	    return "(" + numerator + ", " + denominator + ")"; 
+	    return "(" + x + ", " + y + ")"; 
 	}
 
 }

@@ -92,6 +92,7 @@ public class Board {
             USER_BOARD.add(newUserLine);
             BOMB_BOARD.add(newBombLine);
         }
+        System.out.println(BOMB_BOARD);
         assert checkRep();
     }
     
@@ -228,8 +229,8 @@ public class Board {
         
         while(! toCheck.isEmpty()){
             IntPair nextCoord = toCheck.poll();
-            int i = nextCoord.numerator; // first value
-            int j = nextCoord.denominator; // second value
+            int i = nextCoord.x; // first value
+            int j = nextCoord.y; // second value
             
             // No bomb, not dug or flagged, and not already checked
             if (BOMB_BOARD.get(j).get(i).equals(NO_BOMB) 
@@ -296,8 +297,8 @@ public class Board {
         int bombCount = 0;
         
         for (IntPair child : children) {
-            int i = child.numerator;
-            int j = child.denominator;
+            int i = child.x;
+            int j = child.y;
             
             if (BOMB_BOARD.get(j).get(i).equals(BOMB))
                 bombCount++;
@@ -350,8 +351,8 @@ public class Board {
         List<IntPair> children = getChildren(x, y);
         
         for (IntPair child : children) {
-            int i = child.numerator;
-            int j = child.denominator;
+            int i = child.x;
+            int j = child.y;
             
             String toSet1 = findAdjacentBombCount(i, j).toString();
             if (toSet1.equals("0"))
