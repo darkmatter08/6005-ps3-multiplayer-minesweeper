@@ -18,11 +18,13 @@ public class BoardTest {
      *      - dig on bomb
      *      - dig on neighbor to 1 bomb
      *      - dig on neighbor to many bombs
+     *      - dig on a dug cell, empty and number
      *      - dig recursive
      *      - dig on flag
      *      - dig on unflagged that was previously flagged
      *      - recursive dig shouldn't dig up a flagged square
      *          regardless of having a bomb or not. 
+     *      - dig adjacent to flag, expect flag remains
      *  - Flag and Unflag
      *  - Number of players - add, remove
      */
@@ -67,6 +69,32 @@ public class BoardTest {
         try{
             File file = new File(TestUtil.getResourcePathName("autograder/resources/test.txt"));
             Board b = new Board(file);
+            b.dig(1, 1);
+            String out = b.look();
+            String expected = "- - -\r\n- 3 -\r\n- - -\r\n";
+            assertEquals(out, expected);
+        }catch (IOException e){ fail("Test did not run"); e.printStackTrace(); }
+    }
+    
+    @Test
+    public void digOnDugEmpty() {
+        try{
+            File file = new File(TestUtil.getResourcePathName("autograder/resources/test2.txt"));
+            Board b = new Board(file);
+            b.dig(0, 0);
+            b.dig(0, 0);
+            String out = b.look();
+            String expected = "       \r\n  1 1 1\r\n  1 - -\r\n  1 - -\r\n";
+            assertEquals(out, expected);
+        }catch (IOException e){ fail("Test did not run"); e.printStackTrace(); }
+    }
+    
+    @Test
+    public void digOnDugNumber() {
+        try{
+            File file = new File(TestUtil.getResourcePathName("autograder/resources/test.txt"));
+            Board b = new Board(file);
+            b.dig(1, 1);
             b.dig(1, 1);
             String out = b.look();
             String expected = "- - -\r\n- 3 -\r\n- - -\r\n";
@@ -152,6 +180,21 @@ public class BoardTest {
             b.dig(0, 0);
             String out = b.look();
             String expected  = "  F - -\r\n  F - -\r\n  F - -\r\n  1 - -\r\n";
+            assertEquals(out, expected);
+        }catch (IOException e){ fail("Test did not run"); e.printStackTrace(); }
+    }
+    
+    // tests for subtle bug where we dig a bomb next to a flag. 
+    // The following dig should still not dig the flag. 
+    @Test 
+    public void digBombNextToFlag() {
+        try{
+            File file = new File(TestUtil.getResourcePathName("autograder/resources/test2.txt"));
+            Board b = new Board(file);
+            b.flag(1, 2);
+            b.dig(2, 2);
+            String out = b.look();
+            String expected  = "       \r\n       \r\n  F    \r\n       \r\n";
             assertEquals(out, expected);
         }catch (IOException e){ fail("Test did not run"); e.printStackTrace(); }
     }

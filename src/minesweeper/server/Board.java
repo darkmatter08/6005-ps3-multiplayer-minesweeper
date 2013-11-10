@@ -345,28 +345,19 @@ public class Board {
         }
         USER_BOARD.get(y).set(x, toSet);
         
-        int size = USER_BOARD.size();
-        int xC = x - 1;
-        int yC = y - 1;
-        if(xC >= 0 && yC >= 0) { // bounds ok
-        }else if (xC < 0 && yC < 0){
-            xC++;
-            yC++;
-        }else if (yC < 0){
-            yC++;
-        }else if (xC < 0) {
-            xC++;
-        }
+        List<IntPair> children = getChildren(x, y);
         
-        for (int i = xC; i <= Math.min(size-1, x+1); i++){ // only check until x+1 or size-1
-            for (int j = yC; j <= Math.min(size-1, y+1); j++){
-                String toSet1 = findAdjacentBombCount(i, j).toString();
-                if (toSet1.equals("0")){
-                    toSet1 = DUG_NO_NEIGHBORS;
-                }
-                if (! (USER_BOARD.get(j).get(i).equals(UNTOUCHED)))
-                    USER_BOARD.get(j).set(i, toSet1);
-            }
+        for (IntPair child : children) {
+            int i = child.numerator;
+            int j = child.denominator;
+            
+            String toSet1 = findAdjacentBombCount(i, j).toString();
+            if (toSet1.equals("0"))
+                toSet1 = DUG_NO_NEIGHBORS;
+            // Only update the square if it's not untouched or flagged
+            if (! (USER_BOARD.get(j).get(i).equals(UNTOUCHED) 
+                    || USER_BOARD.get(j).get(i).equals(FLAGGED)))
+                USER_BOARD.get(j).set(i, toSet1);
         }
     }
     
