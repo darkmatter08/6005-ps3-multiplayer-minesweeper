@@ -5,13 +5,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Queue;
-
-import autograder.TestUtil;
 
 /**
  * Representation of the Minesweeper board. 
@@ -130,6 +127,11 @@ public class Board {
         assert checkRep();
     }
     
+    /**
+     * @return String representing the current state of the board. 
+     * '-' represents UNTOUCHED squares, ' ' represents dug squares
+     * '[1-8]' represents a square with that number of neighboring bombs
+     */
     public synchronized String look() {
         String result = "";
         for (List<String> line : USER_BOARD){
