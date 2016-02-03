@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<!-- saved from url=(0044)http://web.mit.edu/6.005/www/fa13/psets/ps3/ -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="utf-8">
+  <script type="text/javascript" src="./readme_files/jquery-1.8.1.min.js"></script>
+  <link rel="stylesheet" href="./readme_files/style.css" type="text/css">
+  <title>Problem Set 3: Multiplayer Minesweeper</title>
+</head>
+<body>
+
+<div class="content">
+
+<h1>6.005 Software Construction<br>
+Problem Set 3: Multiplayer Minesweeper<br>
+Beta Due: Tuesday, November 5, 2013, 10:00 PM<br>
+Code Reviews Due: Thursday, November 7, 2013, 10:00 PM<br>
+Final Due: Tuesday, November 12, 2013, 10:00 PM<br></h1>
+
+<p>The purpose of this problem set is to explore multithreaded programming with a shared mutable data type, which you should protect using synchronization.</p>
+
+<p><b>You have substantial design freedom on this problem set.</b>  However, please do not use any external jar files.
+
+</p><div class="warning"><p>Your solution must not change the name, method signature, class name, package name, or specification of the methods <code>minesweeper.server.MinesweeperServer.main()</code> or <code>minesweeper.server.MinesweeperServer.runMinesweeperServer()</code>.  
+
+</p><p>Also note that the axis definition of your board must match what is defined in "Grammar for messages from the server to the user" section; the (x,y) coordinates start at (0,0) in the top-left corner, extend horizontally to the right in the X direction, and vertically downwards in the Y direction. </p>
+
+<p>Your code will be tested automatically; changing these interfaces or axes will cause our testing suite to fail. Failing the test suite means you get 0 points for your submission: beta, final, or otherwise.</p>
+
+<p>Beyond this requirement you have complete design freedom. For example, you can add new methods, classes, and packages, and rename or delete classes other than MinesweeperServer.</p></div>
+
+<p>To get started, you can use git in the same way as discussed in previous problem sets, but this time the repository path is: </p>
+<pre>    /afs/athena.mit.edu/course/6/6.005/git/fa13/psets/ps3/[YOUR ATHENA NAME].git</pre>
+
+<p>If you need a refresher on how to do this, see <a href="http://web.mit.edu/6.005/www/fa13/psets/ps0/">Problem Set 0</a>.</p>
+
+<h2>Overview</h2>
+
+<p>You will start with some minimal server code and implement a server and thread-safe data structure for playing a multiplayer variant of the classic computer game "Minesweeper."
+
+</p><p>You can review the traditional single-player Minesweeper concept rules on Wikipedia: <a href="http://en.wikipedia.org/wiki/Minesweeper_(video_game)">Minesweeper (video game)</a>
+
+</p><p>You can try playing traditional/single-player Minesweeper <a href="http://minesweeperonline.com/">here</a>.
+</p><p><b>Note:</b> You may notice that the implementation in the latter link above does something subtle. It ensures that there's never a bomb where you make your first click of the game. You should <em>not</em> implement this for the assignment. (It would be in conflict with giving the option to pass in a pre-designed board, for example.)
+
+</p><p>The final product will consist of a server and no client; it should be fully playable using the <code>telnet</code> utility to send text commands directly over a network connection (see further below).
+
+</p><h2>Notes</h2>
+
+<p>We will refer to the board as a grid of N*N squares. Each square is either 'flagged', 'dug', or 'untouched'. Each square also either contains a bomb, or does not contain a bomb.
+
+</p><p>Our variant works very similarly to standard Minesweeper, but with multiple players simultaneously playing on a single board. In both versions, players lose when they try to dig an untouched square that happens to contain a bomb. Whereas a standard Minesweeper game would end at this point, in our version, the game keeps going for the other players. In our version, when one player blows up a bomb, they still lose, and the game ends for them (i.e. the server ends their connection), but the other players may continue playing. The square where the bomb was blown up is now a dug square with no bomb. The player who lost may reconnect to the same game again via <code>telnet</code> to start playing again.
+
+</p><p>Note that there are some tricky cases of user-level concurrency. For example, say user A has just modified the game state (i.e. by digging in one or more squares) such that square i,j obviously has a bomb. Meanwhile, user B has not observed the board state since this update has taken place, so user B goes ahead and digs in square i,j. Your program should allow the user to dig in that square--a user of Multiplayer Minesweeper must accept this kind of risk.
+
+</p><p>We are not specifically defining, or asking you to implement, any kind of "win condition" for the game.
+
+</p><p>In our version of Minesweeper, the board is always square.
+
+</p><h2>Before You Begin...</h2>
+
+<code>telnet</code> is a utility that allows you to make a direct network connection to a listening server and communicate with it via a terminal interface. Before starting this problem set, please ensure that you have <code>telnet</code> installed. *nix operating systems (including OS X) should have <code>telnet</code> installed by default.
+
+<p>Windows users should first check if telnet is installed by running the command <tt>telnet</tt> on the command line.  If you do not have it, you can install it via Control Panel→Programs and Features→Turn windows features on/off→Telnet client.
+
+</p><p>You can have <code>telnet</code> connect to a host/port (for example, <code>web.mit.edu:80</code>) from the command line with "<tt>telnet web.mit.edu 80</tt>". Since port 80 is usually used for HTTP, we can now make HTTP requests through <code>telnet</code>. If you now type "<tt>GET /</tt>", <code>telnet</code> should retrieve the HTML for the webpage at web.mit.edu. If you want to connect to your own machine, you can use <tt>localhost</tt> as the hostname and whatever port your server is listening on. With the default port of 4444 in this problem set, you can connect to your Minesweeper server with "<tt>telnet localhost 4444</tt>".
+
+<!--<p>Alternatively you can open the telnet program and connect from there with the command "<tt>open localhost 4444</tt>".-->
+
+</p><h2>Protocol and Specification</h2>
+
+<p>You must implement the following protocol for communication between the user and the server, as specified below.
+
+</p><h3>Grammar for messages from the user to the server:</h3>
+
+<blockquote>
+<pre>User-to-Server Minesweeper Message Protocol
+  MESSAGE     :== ( LOOK | DIG | FLAG | DEFLAG | HELP_REQ | BYE ) NEWLINE
+  LOOK        :== "look"
+  DIG         :== "dig" SPACE X SPACE Y
+  FLAG        :== "flag" SPACE X SPACE Y
+  DEFLAG      :== "deflag" SPACE X SPACE Y
+  HELP_REQ    :== "help"
+  BYE         :== "bye"
+  NEWLINE     :== "\r?\n"
+  X           :== INT
+  Y           :== INT
+  SPACE       :== " "
+  INT         :== [0-9]+
+<pre>
+</pre></pre></blockquote>
+
+<div class="boxed">
+<img src="./readme_files/check.gif" width="16" height="16"><b>Tips</b>   
+<ul>
+<li><a href="http://docs.oracle.com/javase/6/docs/api/java/io/BufferedReader.html">BufferedReader.readLine()</a> reads a line of text from an input stream, where line is considered to be terminated by any one of a line feed ('\n'), a carriage return ('\r'), or a carriage return followed immediately by a linefeed.</li>
+<li>You can wrap a BufferedReader around both InputStreamReader and FileReader Objects</li>
+<li><a href="http://docs.oracle.com/javase/6/docs/api/java/io/PrintWriter.html#println()">PrinterWriter.println()</a> prints formatted text to an output stream, and terminates the current line by writing the line separator string. The line separator string is defined by the system property line.separator, and is not necessarily a single newline character ('\n').</li>
+<li>You can wrap a PrinterWriter around a Writer or OutputStream objects </li>
+</ul>
+</div>
+
+<p>The action to take for each different kind of message is as follows:
+
+</p><p><b>LOOK message:</b>
+</p><ul>
+<p> Returns a BOARD message, a string representation of the board's state. Does not mutate anything on the server. See the section below ("Grammar for messages from the server to the user") for the exact required format of the BOARD message.
+</p></ul>
+
+<p><b>DIG message:</b>
+</p><ol>
+<li>If either x or y is less than 0, or either x or y is equal to or greater than the board size, or square x,y is not in the 'untouched' state, do nothing and return a BOARD message.
+</li><li>If square x,y's state is 'untouched', change square x,y's state to 'dug'.
+</li><li>If square x,y contains a bomb, change it so that it contains no bomb and send a BOOM message to the user. Then, if the debug flag is missing (see Question 4), terminate the user's connection. See again the section below for the exact required format of the BOOM message. Note: When modifying a square from containing a bomb to no longer containing a bomb, make sure that subsequent BOARD messages show updated bomb counts in the adjacent squares. After removing the bomb continue to the next step. 
+</li><li>If the square x,y has no neighbor squares with bombs, then for each of x,y's 'untouched' neighbor squares, change said square to 'dug' and repeat <em>this step</em> (not the entire DIG procedure) recursively for said neighbor square unless said neighbor square was already dug before said change.
+</li><li>For any DIG message where a BOOM message is not returned, return a BOARD message.
+</li></ol>
+
+<p><b>FLAG message:</b>
+</p><ol>
+<li>If x and y are both greater than or equal to 0, and less than the board size, and square x,y is in the 'untouched' state, change it to be in the 'flagged' state.
+</li><li>Otherwise, do not mutate any state on the server.
+</li><li>For any FLAG message, return a BOARD message.
+</li></ol>
+
+<p><b>DEFLAG message:</b>
+</p><ol>
+<li>If x and y are both greater than or equal to 0, and less than the board size, and square x,y is in the 'flagged' state, change it to be in the 'untouched' state.
+</li><li>Otherwise, do not mutate any state on the server.
+</li><li>For any DEFLAG message, return a BOARD message.
+</li></ol>
+
+<p><b>HELP_REQ message:</b>
+</p><ul>
+<p>Returns a HELP message (see below). Does not mutate anything on the server.
+</p></ul>
+
+<p><b>BYE message:</b>
+</p><ul>
+<p>Terminates the connection with this client.
+</p></ul>
+
+<p>To clarify, for any message which matches the grammar, other than a BYE message, we should always be returning either a BOARD message, a BOOM message, or a HELP message.
+
+</p><p>For any server input which does not match the user-to-server grammar, do nothing.
+
+</p><h3>Grammar for messages from the server to the user:</h3>
+<blockquote>
+<pre>MESSAGE :== BOARD | BOOM | HELP | HELLO
+BOARD :== LINE+
+LINE :== (SQUARE SPACE)* SQUARE NEWLINE
+SQUARE :== "-" | "F" | COUNT | SPACE
+SPACE :== " "
+NEWLINE :== "\r?\n"
+COUNT :== [1-8]
+BOOM :== "BOOM!" NEWLINE
+HELP :== [^NEWLINE]+ NEWLINE
+HELLO :== "Welcome to Minesweeper. " N " people are playing including you. Type 'help' for help." NEWLINE
+N :== INT
+INT :== [0-9]+
+<pre></pre></pre></blockquote>
+
+
+<p>The <b>BOARD</b> message, as the grammar indicates, consists of a series of newline-separated rows of space-separated characters, thereby giving a grid representation of the board's state with exactly one char for each square. The mapping of characters is as follows:
+</p><ul>
+<li>"-" for squares with state 'untouched'.
+</li><li>"F" for squares with state 'flagged'.
+</li><li>" " (space) for squares with state 'dug' and 0 neighbors who have a bomb.
+</li><li>integer COUNT in range [1-8] for squares with state 'dug' and COUNT neighbors that have a bomb.
+</li></ul>
+
+<p>Notice that in this representation we reveal every square's state of 'untouched', 'flagged', or 'dug', and we indirectly reveal limited information about whether some squares have bombs or not.
+
+</p><p>In the printed <b>BOARD</b> output, the (x,y) coordinates start at (0,0) in the top-left corner, extend horizontally to the right in the X direction, and vertically downwards in the Y direction. (While different from the standard geometric convention for IV quadrant, this happens to be what the autograder expects.) So the following output would represent a flagged square at <b>(x=1,y=2)</b> and the rest of the squares being untouched:
+
+</p><pre>- - - - - - -
+- - - - - - -
+- F - - - - -
+- - - - - - -
+- - - - - - -
+- - - - - - -
+- - - - - - -
+</pre>
+
+<p>For autograder to work properly you'll need to preserve this arrangement of cells in board while writing the board messages. 
+
+If you change this order in either writing the board message, or reading the board from file (Problem 4) your implementation will fail in autograding. 
+
+</p><p>The <b>HELP</b> message should print out a message which indicates all the commands the user can send to the server. The exact contents of this message are up to you.
+
+</p><p>As the grammar indicates, the <b>HELLO</b> message includes N which is the number of users currently connected to the server. This message should be sent to the user only once, immediately after the server connects to the user.
+
+</p><h2>Problem 1: Setting up a Server to Deal with Multiple Clients</h2>
+
+<p>We have provided you with a single-thread server which can accept connections with one client at a time, and which includes code to parse the input according to the client-server protocol above. Modify the server so it can maintain multiple client connections simultaneously. Each client connection should be maintained by its own thread. You may wish to add another class to do this. You may continue to do nothing with the parsed user input at this time.
+
+</p><h2>Problem 2: Implementing a Data Structure for Minesweeper </h2>
+
+<p>Specify, implement, and test a data structure for representing the Minesweeper board (as a Java type, without using sockets or threads). Create a <code>Board</code> class as well as any additional classes you might need to accomplish this.  Your Board class must have specifications for all methods, a rep invariant written as a comment, and a rep invariant written as a <code>checkRep()</code> method called by your unit tests.
+  
+</p><h2>Problem 3: Making Your Data Structure Thread-Safe </h2>
+
+<p><b>a.</b> Make the board-related data structure thread-safe using Java's synchronization features. 
+
+</p><p><b>b.</b> Near the top of the source file containing your main Board class, include a substantial comment with an argument about why your board data structure is thread-safe.
+
+</p><h2>Problem 4: Initialize the Board Based on Command-Line Options</h2>
+<p>We want our server to be able to accept some command-line options. The exact specification is given in the JavaDoc for <code>MinesweeperServer.main()</code>, which is excerpted below:
+
+</p><blockquote>
+<p>Usage: <code>MinesweeperServer [--debug] [--port PORT] [--size SIZE | --file FILE]</code>
+
+</p><p>The debug argument means the server should run in debug mode. The server should disconnect a client after a BOOM message if and only if the debug flag argument was not given. E.g. "<code>MinesweeperServer --debug</code>" starts the server in debug mode.
+
+</p><p>PORT is an optional integer in the range 0 to 65535 inclusive, specifying the port the server should be listening on for incoming connections. E.g. "<code>MinesweeperServer --port 1234</code>" starts the server listening on port 1234.
+
+</p><p>SIZE is an optional integer argument specifying that a random board of size SIZE*SIZE should be generated. E.g. "<code>MinesweeperServer --size 15</code>" starts the server initialized with a random board of size 15*15.
+
+</p><p>FILE is an optional argument specifying a file pathname where a board has been stored. If this argument is given, the stored board should be loaded as the starting board. E.g. "<code>MinesweeperServer --file boardfile.txt</code>" starts the server initialized with the board stored in boardfile.txt, however large it happens to be (but the board may be assumed to be square).
+</p></blockquote>
+
+We provide you with the code required to parse these command-line arguments in the <code>main()</code> method already existing in <code>MinesweeperServer</code>. You should not change this method. Instead, you should change <code>runMinesweeperServer</code> to handle each of the two different ways a board can be initialized: either by random, or through input from a file. (You'll deal with the debug flag in Problem 5.)
+
+<p>For a <b>SIZE</b> argument: if the passed-in size X &gt; 0, the server's Board instance should be randomly generated and should have size equal to X by X. To randomly generate your board, you should assign each square to contain a bomb with probability .25 and otherwise no bomb. All squares' states should be set to 'untouched'.
+
+</p><p>For a <b>FILE</b> argument: If a file exists at the given PATH, read the the corresponding file, and if it is properly formatted, deterministically create the Board instance. The file format for input should be:
+
+</p><blockquote>
+<pre>FILE :== LINE+
+LINE :== (VAL SPACE)* VAL NEWLINE
+VAL :== 0 | 1
+SPACE :== " "
+NEWLINE :== "\r?\n"
+<pre></pre></pre></blockquote>
+<div class="boxed">
+<img src="./readme_files/check.gif" width="16" height="16"><b>Tips</b>   
+<ul>
+<li><a href="http://docs.oracle.com/javase/6/docs/api/java/io/BufferedReader.html">BufferedReader.readLine()</a> reads a line of text from an input stream, where line is considered to be terminated by any one of a line feed ('\n'), a carriage return ('\r'), or a carriage return followed immediately by a linefeed. </li>
+<li>You can wrap a BufferedReader around both InputStreamReader and FileReader Objects</li>
+</ul>
+</div>
+
+
+<p>In a properly formatted file matching the FILE grammar, if there are N LINEs, each line must contain N VALs. If the file read is properly formatted, the Board should be instantiated such that square i,j has a bomb if and only if the i'th VAL in LINE j of the input is 1. This is the same convention as for the output of the BOARD message. If the file is improperly formatted, your program should throw an unchecked exception (either RuntimeException or define your own).
+
+</p><p>If you were running your server from the command line and the executable was called 'server', some command-line arguments might look like:
+
+</p><pre>./server --debug
+./server --port 1234
+./server --size 30
+./server --file ../testBoard
+./server --debug --port 1234 --size 30
+</pre>
+
+<p> You may specify command-line arguments in Eclipse by clicking on the drop-down arrow next to "run," clicking on "Run Configurations...", and selecting the "Arguments" tab. Type your arguments into the text box.
+
+</p><p>Implement the <code>runMinesweeperServer</code> method so that it handles the two possible ways to initialize a board (randomly or by loading a file).
+
+</p><h2>Problem 5: Putting it all Together</h2>
+
+<p><b>a.</b> Modify your server so that it implements our protocols and specifications, by keeping a shared reference to a single instance of Board. Note that when we send a BOOM message to the user, we should terminate their connection if and only if the debug flag (see Problem 4) is missing.
+
+</p><p><b>b.</b> Near the top of your MinesweeperServer.java source file, include a substantial comment with an argument about why your server is thread-safe.
+
+
+</p><div class="boxed">
+<img src="./readme_files/check.gif" width="16" height="16"><b>Checkpoint.</b> Pushing your code to your git repository on Athena will cause Didit to run a single staff-provided test, the source code of which is uploaded <a href="https://github.com/mit6005/F13-PS3">here</a>.</div>
+
+
+<h2>Beyond Telnet</h2>
+You are now done with the problem set, but you could imagine not having to use <code>telnet</code> to play Minesweeper. A GUI would do a lot to bring your program to life. Here is GUI client from past student <b>Robin Cheng</b> that you can use to play your Minesweeper game:
+
+<ul>
+<li> <a href="http://web.mit.edu/6.005/www/fa13/psets/ps3/minesweeperGUI.jar">Minesweeper GUI </a>
+</li></ul>
+<p>This GUI waits until you do a LOOK or other operation before updating the view. 
+</p><p>It has UI for spawning clients, so you can actually just run the jar once and then use the UI to spawn a number of clients. 
+</p><p>It also displays a printout of all the protocol I/O which is going on, making it particularly helpful for debugging.
+</p><p>You should have your server running before trying to start a client connection from this GUI.
+</p><p><b>Note:</b> This GUI is unofficial implementation. You may find a bug or incorrect behavior in it in some ways. Do not consider it enough for testing your code.
+
+</p><p>If you want practice writing GUIs, we encourage you to write your own Minesweeper GUI and email the source to the staff.
+
+
+
+</p></div></body></html>
